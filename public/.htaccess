@@ -1,0 +1,24 @@
+# ── Security ──────────────────────────────────────────────────────────────────
+# Prevent direct access to the data directory
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Block access to data/ directory
+    RewriteRule ^data/ - [F,L]
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# Restrict uploads to images only (belt-and-suspenders; PHP also validates)
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|phar)$">
+    <If "-d '%{REQUEST_FILENAME}'">
+        Order deny,allow
+        Deny from all
+    </If>
+</FilesMatch>
+
+# Block PHP execution inside uploads/
+<IfModule mod_rewrite.c>
+    RewriteRule ^uploads/.*\.php$ - [F,L]
+</IfModule>

@@ -1,0 +1,38 @@
+{
+  "name": "Alex Johnson",
+  "headline": "Software Engineer | Full-Stack Developer",
+  "location": "San Francisco, CA",
+  "bio": "Passionate developer with 5+ years of experience building scalable web applications. I love open-source, clean code, and learning new technologies.",
+  "connections": 512,
+  "avatar": null,
+  "banner": null,
+  "posts": [
+    {
+      "id": 1,
+      "author": "Alex Johnson",
+      "content": "Excited to share that I just launched my new open-source project! 🚀 Check it out on GitHub — contributions welcome!",
+      "date": "2 days ago",
+      "likes": 42,
+      "comments": 8,
+      "shares": 5
+    },
+    {
+      "id": 2,
+      "author": "Alex Johnson",
+      "content": "Great article on modern PHP development practices. PHP 8.3 is a game changer — named arguments, readonly properties, and fibers make the language feel fresh again. Highly recommend it to anyone still sleeping on PHP! 💡",
+      "date": "1 week ago",
+      "likes": 28,
+      "comments": 5,
+      "shares": 3
+    },
+    {
+      "id": 3,
+      "author": "Alex Johnson",
+      "content": "Attending #PHPConf this weekend. Looking forward to the talks on asynchronous PHP and modern architecture patterns. Drop a 👋 if you'll be there too!",
+      "date": "2 weeks ago",
+      "likes": 61,
+      "comments": 14,
+      "shares": 7
+    }
+  ]
+}
