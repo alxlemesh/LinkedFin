@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    // Проверять типы в .js файлах
+    "checkJs": true,
+    "lib": ["ESNext"],
+    // В какую версию JS компилировать синтаксис
+    "target": "ESNext",
+    // Формат модулей на выходе (ESM/CJS в зависимости от package.json "type")
+    "module": "nodenext",
+    // Алгоритм резолва импортов (поддержка exports в package.json, требует расширений)
+    "moduleResolution": "nodenext",
+    // Включить все строгие проверки типов
+    "strict": true,
+    // Запретить неявный any (уже включено через strict, оставлено явно)
+    "noImplicitAny": true,
+    // Совместимость default-импортов из CJS модулей
+    "esModuleInterop": true,
+    // Делает catch(e) типом unknown вместо any
+    "useUnknownInCatchVariables": false,
+    // Пропустить проверку типов в .d.ts (как из node_modules, так и файлах проекта).
+    "skipLibCheck": true,
+    // Только проверка типов, без генерации JS
+    "noEmit": true,
+    // Разрешить импорты с расширением .ts/.tsx
+    "allowImportingTsExtensions": true,
+    // Алиасы путей (для типов)
+    "paths": {
+      // "@shared/*": ["./app/shared/*"],
+      // "@components/*": ["./app/components/*"]
+    },
+    "types": ["node"]
+  },
+  // Папки для проверки типов, при отсутствии типы проверяются во всех папках
+  "include": ["app"],
+  // Исключить node_modules из проверки
+  "exclude": ["**/node_modules/*"]
+}

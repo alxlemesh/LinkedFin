@@ -1,0 +1,25 @@
+// https://blog.logrocket.com/using-prettier-eslint-javascript-formatting/
+{
+  "[javascript]": {
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": [
+      // Сначала форматирование prettier, затем eslint
+      // Нужно расширение https://marketplace.visualstudio.com/items?itemName=rohit-gohri.format-code-action
+      "source.formatDocument",
+      "source.fixAll.eslint"
+    ]
+  },
+  "[typescript]": {
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": [
+      // Сначала форматирование prettier, затем eslint
+      // Нужно расширение https://marketplace.visualstudio.com/items?itemName=rohit-gohri.format-code-action
+      "source.formatDocument",
+      "source.fixAll.eslint"
+    ]
+  },
+  "code-runner.executorMap": {
+    "javascript": "node --env-file=.env",
+    "typescript": "node --env-file=.env"
+  }
+}
