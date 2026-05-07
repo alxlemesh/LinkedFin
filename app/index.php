@@ -1,6 +1,6 @@
 <?php
 /**
- * index redirecting page, checks coockeie session and redirects to profile or login page.
+ * Стартовая страница: проверяет сессию и перенаправляет на профиль или страницу входа.
  */
 session_start();
 if (!empty($_SESSION['user_id'])) {

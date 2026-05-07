@@ -13,7 +13,7 @@ export const initLikeButtons = () => {
             const nextLike = liked ? 0 : 1;
             const prevCount = Number.parseInt(countEl?.textContent ?? '0', 10) || 0;
 
-            // optimistic UI
+            // оптимистичное обновление интерфейса
             if (countEl) countEl.textContent = `${prevCount + (nextLike === 1 ? 1 : -1)}`;
             target.dataset.liked = `${nextLike}`;
             target.style.color = nextLike === 1 ? '#0a66c2' : '';
@@ -37,7 +37,7 @@ export const initLikeButtons = () => {
                     if (countEl) countEl.textContent = `${data.likes}`;
                 })
                 .catch(() => {
-                    // revert UI
+                    // откатываем изменения интерфейса
                     if (countEl) countEl.textContent = `${prevCount}`;
                     target.dataset.liked = liked ? '1' : '0';
                     target.style.color = liked ? '#0a66c2' : '';

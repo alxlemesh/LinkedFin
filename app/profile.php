@@ -4,7 +4,7 @@
  */
 session_start();
 
-// Auth guard
+// Проверка аутентификации
 if (empty($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -14,7 +14,7 @@ require_once __DIR__ . '/db.php';
 
 $userId = (int)$_SESSION['user_id'];
 
-// Load user from DB
+// Загружаем пользователя из БД
 $stmt = db()->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
 $stmt->bind_param('i', $userId);
 $stmt->execute();
@@ -27,14 +27,14 @@ if (!$user) {
     exit;
 }
 
-// Load posts
+// Загружаем посты
 $stmt = db()->prepare('SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC');
 $stmt->bind_param('i', $userId);
 $stmt->execute();
 $posts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Image helper – returns a raw URL (caller must htmlspecialchars() when echoing into HTML)
+// Вспомогательная функция для изображений — возвращает «сырой» URL (вызывающий код должен применить htmlspecialchars() при выводе в HTML)
 function imageUrl(?string $filename, string $type): string
 {
     if ($filename && file_exists(__DIR__ . '/uploads/' . $filename)) {
@@ -43,7 +43,7 @@ function imageUrl(?string $filename, string $type): string
     return '/img/defaults.php?type=' . $type;
 }
 
-// Format date
+// Форматирование даты
 function friendlyDate(string $ts): string
 {
     $diff = time() - strtotime($ts);
@@ -63,7 +63,7 @@ $location    = htmlspecialchars($user['location']);
 $bio         = htmlspecialchars($user['bio']);
 $connections = number_format((int)$user['connections']);
 
-// Flash messages
+// Flash-сообщения
 $success = $_SESSION['flash_success'] ?? null;
 $error   = $_SESSION['flash_error']   ?? null;
 unset($_SESSION['flash_success'], $_SESSION['flash_error']);

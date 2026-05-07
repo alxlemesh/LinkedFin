@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Already logged in → go to profile
+// Уже вошёл в систему → перенаправляем на профиль
 if (!empty($_SESSION['user_id'])) {
     header('Location: profile.php');
     exit;

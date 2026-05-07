@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Auth guard
+// Проверка аутентификации
 if (empty($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -32,7 +32,7 @@ function flashError(string $msg): void
 }
 
 /**
- * Validate and move an uploaded image, then return the saved filename.
+ * Проверяет и перемещает загружённое изображение, возвращает сохранённое имя файла.
  */
 function handleImageUpload(
     string $inputName,
@@ -117,7 +117,7 @@ function handleImageUpload(
     return $filename;
 }
 
-// route
+// Маршрутизация
 
 switch ($action) {
 
@@ -149,13 +149,13 @@ switch ($action) {
         $stmt->close();
         redirect('update_profile.php');
 
-    // ── Upload avatar ─────────────────────────────────────────────────────────
+    // ── Загрузка аватара ──────────────────────────────────────────────────────
     case 'upload_avatar':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('update_profile.php');
         }
 
-        // Fetch old avatar to clean up after
+        // Получаем старый аватар для последующего удаления
         $selStmt = db()->prepare('SELECT avatar FROM users WHERE id=? LIMIT 1');
         $selStmt->bind_param('i', $userId);
         $selStmt->execute();
@@ -170,7 +170,7 @@ switch ($action) {
             $stmt->execute();
             $stmt->close();
 
-            // Remove old file
+            // Удаляем старый файл
             if ($oldFile && $oldFile !== $filename && file_exists($uploadDir . $oldFile)) {
                 @unlink($uploadDir . $oldFile);
             }
@@ -178,7 +178,7 @@ switch ($action) {
         }
         redirect('update_profile.php');
 
-    // ── Upload banner ─────────────────────────────────────────────────────────
+    // ── Загрузка баннера ──────────────────────────────────────────────────────
     case 'upload_banner':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('update_profile.php');

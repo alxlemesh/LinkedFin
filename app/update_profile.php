@@ -4,7 +4,7 @@
  */
 session_start();
 
-// Auth guard
+// Проверка аутентификации
 if (empty($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -14,7 +14,7 @@ require_once __DIR__ . '/db.php';
 
 $userId = (int)$_SESSION['user_id'];
 
-// Load user from DB
+// Загружаем пользователя из БД
 $stmt = db()->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
 $stmt->bind_param('i', $userId);
 $stmt->execute();
@@ -27,7 +27,7 @@ if (!$user) {
     exit;
 }
 
-// Image helper – returns a raw URL; escape at output context
+// Вспомогательная функция: возвращает «сырой» URL; экранирование выполняется при выводе
 function currentImageSrc(?string $filename, string $type): string
 {
     if ($filename && file_exists(__DIR__ . '/uploads/' . $filename)) {
@@ -39,7 +39,7 @@ function currentImageSrc(?string $filename, string $type): string
 $avatarSrc = htmlspecialchars(currentImageSrc($user['avatar'], 'avatar'), ENT_QUOTES);
 $bannerSrc = htmlspecialchars(currentImageSrc($user['banner'], 'banner'), ENT_QUOTES);
 
-// Flash messages
+// Flash-сообщения
 $success = $_SESSION['flash_success'] ?? null;
 $error   = $_SESSION['flash_error']   ?? null;
 unset($_SESSION['flash_success'], $_SESSION['flash_error']);

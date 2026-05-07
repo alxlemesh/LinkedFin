@@ -10,7 +10,7 @@ $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 switch ($action) {
 
-    // ── Login ──────────────────────────────────────────────────────────────────
+    // ── Вход ───────────────────────────────────────────────────────────────────
     case 'login':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: login.php');
@@ -34,7 +34,7 @@ switch ($action) {
         $stmt->close();
 
         if ($user && password_verify($password, $user['password_hash'])) {
-            // Regenerate session ID to prevent fixation
+            // Обновляем ID сессии для защиты от фиксации
             session_regenerate_id(true);
             $_SESSION['user_id']  = (int)$user['id'];
             $_SESSION['username'] = $username;
@@ -46,7 +46,7 @@ switch ($action) {
         header('Location: login.php');
         exit;
 
-    // ── Logout ─────────────────────────────────────────────────────────────────
+    // ── Выход ──────────────────────────────────────────────────────────────────
     case 'logout':
         $_SESSION = [];
         if (ini_get('session.use_cookies')) {

@@ -2,10 +2,10 @@
 /**
  * LinkedFin – process_like.php
  *
- * Persists like/unlike actions by updating posts.likes.
+ * Сохраняет действия «нравится/не нравится», обновляя поле posts.likes.
  *
- * Note: This implementation tracks only the aggregate likes counter.
- * It does not enforce one-like-per-user without a separate likes table.
+ * Примечание: данная реализация хранит только суммарный счётчик лайков.
+ * Ограничение «один лайк на пользователя» без отдельной таблицы лайков не применяется.
  */
 session_start();
 
@@ -23,10 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-require_once __DIR__ . '/db.php'; // Reuse db connection and config
+require_once __DIR__ . '/db.php'; // Повторно используем соединение с БД и конфигурацию
 
 $postId = isset($_POST['post_id']) ? (int)$_POST['post_id'] : 0;
-$like   = isset($_POST['like']) ? (int)$_POST['like'] : -1; // 1=like, 0=unlike
+$like   = isset($_POST['like']) ? (int)$_POST['like'] : -1; // 1=лайк, 0=убрать лайк
 
 if ($postId <= 0 || ($like !== 0 && $like !== 1)) {
     http_response_code(400);
@@ -37,7 +37,7 @@ if ($postId <= 0 || ($like !== 0 && $like !== 1)) {
 $delta = ($like === 1) ? 1 : -1;
 
 try {
-    // Ensure the post exists
+    // Проверяем, что пост существует
     $sel = db()->prepare('SELECT id FROM posts WHERE id = ? LIMIT 1');
     $sel->bind_param('i', $postId);
     $sel->execute();
@@ -50,7 +50,7 @@ try {
         exit;
     }
 
-    // Update likes, preventing it from going below zero
+    // Обновляем счётчик лайков, не допуская отрицательных значений
     $upd = db()->prepare(
         'UPDATE posts SET likes = CASE WHEN likes + ? < 0 THEN 0 ELSE likes + ? END WHERE id = ?'
     );

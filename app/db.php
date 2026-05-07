@@ -1,11 +1,11 @@
 <?php
 
-declare(strict_types=1); // jak 'use strict' w JS
+declare(strict_types=1); // как 'use strict' в JS
 require_once __DIR__ . '/config.php';
 
 
 /**
-  * Returns a mysqli connection. Uses a static variable to reuse the same connection.
+  * Возвращает соединение mysqli. Использует статическую переменную для повторного использования соединения.
  */
 function db(): mysqli
 {

@@ -22,14 +22,14 @@ imagefill($img, 0, 0, $bgColor);
 
 if ($text !== '') {
     $white = imagecolorallocate($img, 255, 255, 255);
-    $font  = 5; // built-in font
+    $font  = 5; // встроенный шрифт
     $tw    = imagefontwidth($font)  * strlen($text);
     $th    = imagefontheight($font);
     $scale = 8;
-    // Draw big text by tiling
+    // Рисуем увеличенный текст путём масштабирования
     $x = (int)(($width  - $tw  * $scale) / 2);
     $y = (int)(($height - $th  * $scale) / 2);
-    // Use imagestring for simple centered initials
+    // Используем imagestring для вывода инициалов по центру
     imagestring($img, $font, (int)(($width - $tw) / 2), (int)(($height - $th) / 2), $text, $white);
 }
 

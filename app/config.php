@@ -5,4 +5,4 @@ define('DB_SOCKET', getenv('DB_SOCKET') ?: '');
 define('DB_USER',   getenv('DB_USER')   ?: 'root');
 define('DB_PASS',   getenv('DB_PASS')   ?: '');
 define('DB_NAME',   getenv('DB_NAME')   ?: 'linkedfin');
-// defenicja danych bazy danych, które są pobierane z pliku .env, a jeśli nie są tam ustawione, to przyjmują wartości domyślne.
+// Определение параметров подключения к БД: читаются из переменных окружения, при их отсутствии используются значения по умолчанию.

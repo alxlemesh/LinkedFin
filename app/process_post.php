@@ -2,7 +2,7 @@
 
 session_start();
 
-// Auth guard
+// Проверка аутентификации
 if (empty($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $userId  = (int)$_SESSION['user_id'];
 $content = trim((string)($_POST['content'] ?? ''));
 
-// Keep it simple and safe
+// Простое и безопасное ограничение длины
 $content = mb_substr($content, 0, 2000);
 
 if ($content === '') {
