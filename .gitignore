@@ -1,9 +1,5 @@
-node_modules
-.env*
-!.env.example
-.DS_Store
-
-# PHP uploaded files (keep the directory via .gitkeep, but ignore actual uploads)
-public/uploads/*
-!public/uploads/.gitkeep
-!public/uploads/.htaccess
+.env
+.DS_STORE
+*.jpg
+*.png
+*.gif

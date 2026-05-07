@@ -1,8 +1,3 @@
-/* ============================================================
-   LinkedFin profile stylesheet
-   ============================================================ */
-
-/* Reset & base */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -14,7 +9,7 @@ body {
 
 a { color: inherit; text-decoration: none; }
 
-/* ── Top nav ── */
+
 .nav {
     background: #fff;
     border-bottom: 1px solid #e0dede;

@@ -6,7 +6,7 @@ session_start();
 
 // Auth guard
 if (empty($_SESSION['user_id'])) {
-    header('Location: /login.php');
+    header('Location: login.php');
     exit;
 }
 
@@ -23,7 +23,7 @@ $stmt->close();
 
 if (!$user) {
     session_destroy();
-    header('Location: /login.php');
+    header('Location: login.php');
     exit;
 }
 
@@ -38,7 +38,7 @@ $stmt->close();
 function imageUrl(?string $filename, string $type): string
 {
     if ($filename && file_exists(__DIR__ . '/uploads/' . $filename)) {
-        return '/uploads/' . $filename;
+        return './uploads/' . $filename;
     }
     return '/img/defaults.php?type=' . $type;
 }
@@ -62,6 +62,11 @@ $headline    = htmlspecialchars($user['headline']);
 $location    = htmlspecialchars($user['location']);
 $bio         = htmlspecialchars($user['bio']);
 $connections = number_format((int)$user['connections']);
+
+// Flash messages
+$success = $_SESSION['flash_success'] ?? null;
+$error   = $_SESSION['flash_error']   ?? null;
+unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,20 +74,30 @@ $connections = number_format((int)$user['connections']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $name ?> | LinkedFin</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
 
 <!-- ── Navigation ── -->
 <nav class="nav">
-    <a href="/profile.php" class="nav-brand">
+    <a href="profile.php" class="nav-brand">
         <span class="nav-logo-icon">LF</span>
         <span class="nav-title">LinkedFin</span>
     </a>
     <span class="nav-spacer"></span>
-    <a href="/update_profile.php" class="nav-btn">✏️ Edit profile</a>
-    <a href="/auth.php?action=logout" class="nav-btn nav-btn-outline">Sign out</a>
+    <a href="auth.php?action=logout" class="nav-btn nav-btn-outline">Sign out</a>
 </nav>
+
+<?php if ($success): ?>
+    <div class="update-wrap" style="padding-bottom:0;">
+        <div class="alert alert-success">✅ <?= htmlspecialchars($success) ?></div>
+    </div>
+<?php endif; ?>
+<?php if ($error): ?>
+    <div class="update-wrap" style="padding-bottom:0;">
+        <div class="alert alert-error">❌ <?= htmlspecialchars($error) ?></div>
+    </div>
+<?php endif; ?>
 
 <!-- ── Page layout ── -->
 <div class="page-wrap">
@@ -96,7 +111,7 @@ $connections = number_format((int)$user['connections']);
             <!-- Banner -->
             <div class="banner-wrap">
                 <img src="<?= $bannerSrc ?>" alt="Banner" class="banner-img">
-                <a href="/update_profile.php#banner" class="banner-edit-btn" title="Edit banner">✏️</a>
+                <a href="update_profile.php#banner" class="banner-edit-btn" title="Edit banner">✏️</a>
 
                 <!-- Round avatar -->
                 <div class="avatar-wrap">
@@ -120,18 +135,26 @@ $connections = number_format((int)$user['connections']);
                     <div class="profile-bio"><?= nl2br($bio) ?></div>
                 <?php endif; ?>
                 <div class="profile-actions">
-                    <a href="/update_profile.php" class="btn-primary">Edit profile</a>
-                    <button class="btn-outline" type="button">Message</button>
+                    <a href="update_profile.php" class="btn-primary">Edit profile</a>
+                    <a class="btn-outline" href="#make-post">Make post</a>
                     <button class="btn-outline" type="button">More ▾</button>
                 </div>
             </div>
         </div>
 
         <!-- Activity / Wall -->
-        <?php if (!empty($posts)): ?>
         <div class="card" style="margin-top: 8px;">
             <h2 class="section-title">Activity</h2>
+            <div class="post-compose" id="make-post">
+                <form method="POST" action="process_post.php" class="post-compose-form">
+                    <textarea name="content" maxlength="2000" rows="3" placeholder="Share an update…" required></textarea>
+                    <div class="post-compose-actions">
+                        <button class="btn-primary" type="submit">Post</button>
+                    </div>
+                </form>
+            </div>
             <div class="post-list">
+                <?php if (!empty($posts)): ?>
                 <?php foreach ($posts as $post): ?>
                 <article class="post-item">
                     <div class="post-header">
@@ -156,9 +179,9 @@ $connections = number_format((int)$user['connections']);
                     </div>
                 </article>
                 <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
-        <?php endif; ?>
 
     </div><!-- /main-col -->
 
@@ -178,8 +201,8 @@ $connections = number_format((int)$user['connections']);
         </div>
     </aside>
 
-</div><!-- /page-wrap -->
+</div>
 
-<script src="/js/app.js"></script>
+<script type="module" src="./js/app.js"></script>
 </body>
 </html>

@@ -1,19 +1,9 @@
 <?php
-/**
- * LinkedFin – process_upload.php
- *
- * Handles profile-info updates and image uploads.
- * All changes are persisted to the linkedfin MySQL database via mysqli.
- *
- * Image constraints enforced server-side:
- *   Avatar : max 8 MB, JPEG/PNG/GIF, min 200×200 px
- *   Banner : max 8 MB, JPEG/PNG/GIF, min 400×100 px
- */
 session_start();
 
 // Auth guard
 if (empty($_SESSION['user_id'])) {
-    header('Location: /login.php');
+    header('Location: login.php');
     exit;
 }
 
@@ -49,6 +39,8 @@ function handleImageUpload(
     int    $maxBytes,
     int    $minW,
     int    $minH,
+    int    $aspectW,
+    int    $aspectH,
     string $uploadDir,
     string $prefix
 ): ?string {
@@ -100,6 +92,14 @@ function handleImageUpload(
         return null;
     }
 
+    if (($imgW * $aspectH) !== ($imgH * $aspectW)) {
+        flashError(
+            "Invalid image ratio ({$imgW}×{$imgH} px). " .
+            "Required ratio: {$aspectW}:{$aspectH}."
+        );
+        return null;
+    }
+
     $ext = match ($mime) {
         'image/jpeg' => 'jpg',
         'image/png'  => 'png',
@@ -117,14 +117,14 @@ function handleImageUpload(
     return $filename;
 }
 
-// ── Route ──────────────────────────────────────────────────────────────────────
+// route
 
 switch ($action) {
 
-    // ── Update text info ──────────────────────────────────────────────────────
+
     case 'update_info':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('/update_profile.php');
+            redirect('update_profile.php');
         }
 
         $name     = mb_substr(trim($_POST['name']     ?? ''), 0, 100);
@@ -134,7 +134,7 @@ switch ($action) {
 
         if ($name === '') {
             flashError('Full name cannot be empty.');
-            redirect('/update_profile.php');
+            redirect('update_profile.php');
         }
 
         $stmt = db()->prepare(
@@ -147,12 +147,12 @@ switch ($action) {
             flashError('Failed to update profile. Please try again.');
         }
         $stmt->close();
-        redirect('/update_profile.php');
+        redirect('update_profile.php');
 
     // ── Upload avatar ─────────────────────────────────────────────────────────
     case 'upload_avatar':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('/update_profile.php');
+            redirect('update_profile.php');
         }
 
         // Fetch old avatar to clean up after
@@ -163,7 +163,7 @@ switch ($action) {
         $selStmt->close();
         $oldFile = $oldUser['avatar'] ?? null;
 
-        $filename = handleImageUpload('avatar_file', 8 * 1024 * 1024, 200, 200, $uploadDir, 'avatar_');
+        $filename = handleImageUpload('avatar_file', 8 * 1024 * 1024, 200, 200, 1, 1, $uploadDir, 'avatar_');
         if ($filename !== null) {
             $stmt = db()->prepare('UPDATE users SET avatar=? WHERE id=?');
             $stmt->bind_param('si', $filename, $userId);
@@ -176,12 +176,12 @@ switch ($action) {
             }
             flashSuccess('Profile picture updated successfully.');
         }
-        redirect('/update_profile.php');
+        redirect('update_profile.php');
 
     // ── Upload banner ─────────────────────────────────────────────────────────
     case 'upload_banner':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('/update_profile.php');
+            redirect('update_profile.php');
         }
 
         $selStmt = db()->prepare('SELECT banner FROM users WHERE id=? LIMIT 1');
@@ -191,7 +191,7 @@ switch ($action) {
         $selStmt->close();
         $oldFile = $oldUser['banner'] ?? null;
 
-        $filename = handleImageUpload('banner_file', 8 * 1024 * 1024, 400, 100, $uploadDir, 'banner_');
+        $filename = handleImageUpload('banner_file', 8 * 1024 * 1024, 400, 100, 4, 1, $uploadDir, 'banner_');
         if ($filename !== null) {
             $stmt = db()->prepare('UPDATE users SET banner=? WHERE id=?');
             $stmt->bind_param('si', $filename, $userId);
@@ -203,8 +203,8 @@ switch ($action) {
             }
             flashSuccess('Banner photo updated successfully.');
         }
-        redirect('/update_profile.php#banner');
+        redirect('update_profile.php#banner');
 
     default:
-        redirect('/update_profile.php');
+        redirect('update_profile.php');
 }

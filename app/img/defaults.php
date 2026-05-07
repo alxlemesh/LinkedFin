@@ -1,9 +1,4 @@
 <?php
-/**
- * Serves default placeholder images (avatar or banner) generated with PHP GD.
- * Usage: /img/defaults.php?type=avatar   or   /img/defaults.php?type=banner
- */
-
 $type = $_GET['type'] ?? 'avatar';
 
 if ($type === 'banner') {

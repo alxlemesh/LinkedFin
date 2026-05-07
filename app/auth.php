@@ -13,7 +13,7 @@ switch ($action) {
     // ── Login ──────────────────────────────────────────────────────────────────
     case 'login':
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /login.php');
+            header('Location: login.php');
             exit;
         }
 
@@ -22,7 +22,7 @@ switch ($action) {
 
         if ($username === '' || $password === '') {
             $_SESSION['login_error'] = 'Username and password are required.';
-            header('Location: /login.php');
+            header('Location: login.php');
             exit;
         }
 
@@ -38,12 +38,12 @@ switch ($action) {
             session_regenerate_id(true);
             $_SESSION['user_id']  = (int)$user['id'];
             $_SESSION['username'] = $username;
-            header('Location: /profile.php');
+            header('Location: profile.php');
             exit;
         }
 
         $_SESSION['login_error'] = 'Incorrect username or password.';
-        header('Location: /login.php');
+        header('Location: login.php');
         exit;
 
     // ── Logout ─────────────────────────────────────────────────────────────────
@@ -54,10 +54,10 @@ switch ($action) {
             setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
         }
         session_destroy();
-        header('Location: /login.php');
+        header('Location: login.php');
         exit;
 
     default:
-        header('Location: /login.php');
+        header('Location: login.php');
         exit;
 }

@@ -6,7 +6,7 @@ session_start();
 
 // Auth guard
 if (empty($_SESSION['user_id'])) {
-    header('Location: /login.php');
+    header('Location: login.php');
     exit;
 }
 
@@ -23,7 +23,7 @@ $stmt->close();
 
 if (!$user) {
     session_destroy();
-    header('Location: /login.php');
+    header('Location: login.php');
     exit;
 }
 
@@ -31,9 +31,9 @@ if (!$user) {
 function currentImageSrc(?string $filename, string $type): string
 {
     if ($filename && file_exists(__DIR__ . '/uploads/' . $filename)) {
-        return '/uploads/' . $filename;
+        return './uploads/' . $filename;
     }
-    return '/img/defaults.php?type=' . $type;
+    return './img/defaults.php?type=' . $type;
 }
 
 $avatarSrc = htmlspecialchars(currentImageSrc($user['avatar'], 'avatar'), ENT_QUOTES);
@@ -50,17 +50,17 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile | LinkedFin</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
 
 <nav class="nav">
-    <a href="/profile.php" class="nav-brand">
+    <a href="profile.php" class="nav-brand">
         <span class="nav-logo-icon">LF</span>
         <span class="nav-title">LinkedFin</span>
     </a>
     <span class="nav-spacer"></span>
-    <a href="/profile.php" class="nav-btn">← View profile</a>
+    <a href="profile.php" class="nav-btn">← View profile</a>
     <a href="/auth.php?action=logout" class="nav-btn nav-btn-outline">Sign out</a>
 </nav>
 
@@ -76,7 +76,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
         <?php endif; ?>
 
         <!-- ── Profile info form ── -->
-        <form method="POST" action="/process_upload.php" enctype="multipart/form-data">
+        <form method="POST" action="process_upload.php" enctype="multipart/form-data">
             <input type="hidden" name="action" value="update_info">
 
             <div class="form-group">
@@ -109,7 +109,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             </div>
 
             <div class="form-submit">
-                <a href="/profile.php" class="btn-outline">Cancel</a>
+                <a href="profile.php" class="btn-outline">Cancel</a>
                 <button type="submit" class="btn-primary">Save info</button>
             </div>
         </form>
@@ -125,7 +125,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <div style="font-size:13px;color:#00000099;">Current profile picture</div>
         </div>
 
-        <form method="POST" action="/process_upload.php" enctype="multipart/form-data">
+        <form method="POST" action="process_upload.php" enctype="multipart/form-data">
             <input type="hidden" name="action" value="upload_avatar">
 
             <div class="form-group">
@@ -137,22 +137,14 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                     <div class="file-upload-hint">
                         <strong>Click to choose</strong> or drag &amp; drop<br>
                         JPEG, PNG or GIF — max <strong>8 MB</strong><br>
-                        Recommended: <strong>400 × 400 px</strong>, min <strong>200 × 200 px</strong>
+                        Required: <strong>1:1 ratio</strong>, min <strong>200 × 200 px</strong>
                     </div>
                 </div>
                 <div id="avatar-preview-wrap" class="preview-wrap">
                     <img id="avatar-preview-img" class="preview-avatar" src="" alt="Preview">
                     <span id="avatar-preview-name" class="preview-filename"></span>
                 </div>
-                <div style="margin-top:8px;">
-                    <span class="constraint-badge">📐 Min 200×200 px</span>
-                    <span class="constraint-badge">📏 Max 8 MB</span>
-                    <span class="constraint-badge">🖼️ JPEG / PNG / GIF</span>
-                </div>
-            </div>
 
-            <div class="form-submit">
-                <button type="submit" class="btn-primary">Upload picture</button>
             </div>
         </form>
 
@@ -166,7 +158,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                  style="width:100%;max-height:120px;border-radius:6px;object-fit:cover;border:1px solid #e0dede;">
         </div>
 
-        <form method="POST" action="/process_upload.php" enctype="multipart/form-data">
+        <form method="POST" action="process_upload.php" enctype="multipart/form-data">
             <input type="hidden" name="action" value="upload_banner">
 
             <div class="form-group">
@@ -178,28 +170,19 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                     <div class="file-upload-hint">
                         <strong>Click to choose</strong> or drag &amp; drop<br>
                         JPEG, PNG or GIF — max <strong>8 MB</strong><br>
-                        Recommended: <strong>1584 × 396 px</strong> (4:1), min <strong>400 × 100 px</strong>
+                        Required: <strong>4:1 ratio</strong>, min <strong>400 × 100 px</strong>
                     </div>
                 </div>
                 <div id="banner-preview-wrap" class="preview-wrap">
                     <img id="banner-preview-img" class="preview-banner" src="" alt="Preview">
                     <span id="banner-preview-name" class="preview-filename"></span>
                 </div>
-                <div style="margin-top:8px;">
-                    <span class="constraint-badge">📐 Min 400×100 px</span>
-                    <span class="constraint-badge">📏 Max 8 MB</span>
-                    <span class="constraint-badge">🖼️ JPEG / PNG / GIF</span>
-                </div>
-            </div>
-
-            <div class="form-submit">
-                <button type="submit" class="btn-primary">Upload banner</button>
             </div>
         </form>
 
     </div>
 </div>
 
-<script src="/js/app.js"></script>
+<script type="module" src="./js/app.js"></script>
 </body>
 </html>

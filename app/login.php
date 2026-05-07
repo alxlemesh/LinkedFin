@@ -1,12 +1,9 @@
 <?php
-/**
- * LinkedFin – Login page
- */
 session_start();
 
 // Already logged in → go to profile
 if (!empty($_SESSION['user_id'])) {
-    header('Location: /profile.php');
+    header('Location: profile.php');
     exit;
 }
 
@@ -19,7 +16,7 @@ unset($_SESSION['login_error']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LinkedFin – Sign In</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="./css/style.css">
     <style>
         body { background: #f3f2ef; display: flex; flex-direction: column; min-height: 100vh; }
         .login-header {
@@ -136,7 +133,7 @@ unset($_SESSION['login_error']);
 <body>
 
 <header class="login-header">
-    <a href="/login.php" class="login-logo">
+    <a href="login.php" class="login-logo">
         <span class="login-logo-icon">LF</span>
         LinkedFin
     </a>
@@ -150,7 +147,7 @@ unset($_SESSION['login_error']);
             <div class="login-error">⚠️ <?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
-        <form method="POST" action="/auth.php">
+        <form method="POST" action="auth.php">
             <input type="hidden" name="action" value="login">
 
             <div class="login-field">

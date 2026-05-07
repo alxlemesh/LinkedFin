@@ -1,12 +1,12 @@
 <?php
-/**
- * Returns a shared mysqli connection. Exits with an error page on failure.
- */
 
-declare(strict_types=1);
-
+declare(strict_types=1); // jak 'use strict' w JS
 require_once __DIR__ . '/config.php';
 
+
+/**
+  * Returns a mysqli connection. Uses a static variable to reuse the same connection.
+ */
 function db(): mysqli
 {
     static $conn = null;
