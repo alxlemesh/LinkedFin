@@ -1,58 +1,87 @@
 <?php
 /**
- * LinkedIn-like Profile Page
+ * LinkedFin – Profile Page
  */
-
 session_start();
 
-$dataFile = __DIR__ . '/data/profile.json';
-$profile  = json_decode(file_get_contents($dataFile), true);
+// Auth guard
+if (empty($_SESSION['user_id'])) {
+    header('Location: /login.php');
+    exit;
+}
 
-// Helper: resolve image URL for avatar or banner
-function imageUrl(string $key, string $type): string
+require_once __DIR__ . '/db.php';
+
+$userId = (int)$_SESSION['user_id'];
+
+// Load user from DB
+$stmt = db()->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
+$stmt->bind_param('i', $userId);
+$stmt->execute();
+$user = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+if (!$user) {
+    session_destroy();
+    header('Location: /login.php');
+    exit;
+}
+
+// Load posts
+$stmt = db()->prepare('SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC');
+$stmt->bind_param('i', $userId);
+$stmt->execute();
+$posts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// Image helper – returns a raw URL (caller must htmlspecialchars() when echoing into HTML)
+function imageUrl(?string $filename, string $type): string
 {
-    $val = $_SESSION[$key] ?? null;
-    if ($val && file_exists(__DIR__ . '/uploads/' . $val)) {
-        return '/uploads/' . $val;
+    if ($filename && file_exists(__DIR__ . '/uploads/' . $filename)) {
+        return '/uploads/' . $filename;
     }
     return '/img/defaults.php?type=' . $type;
 }
 
-// Merge saved overrides (name, headline, bio, location) from session
-foreach (['name', 'headline', 'bio', 'location'] as $field) {
-    if (!empty($_SESSION[$field])) {
-        $profile[$field] = $_SESSION[$field];
-    }
+// Format date
+function friendlyDate(string $ts): string
+{
+    $diff = time() - strtotime($ts);
+    if ($diff < 60)      return 'Just now';
+    if ($diff < 3600)    return (int)($diff / 60) . 'm ago';
+    if ($diff < 86400)   return (int)($diff / 3600) . 'h ago';
+    if ($diff < 604800)  return (int)($diff / 86400) . 'd ago';
+    if ($diff < 2592000) return (int)($diff / 604800) . 'w ago';
+    return date('M j, Y', strtotime($ts));
 }
 
-$avatarSrc = imageUrl('avatar', 'avatar');
-$bannerSrc = imageUrl('banner', 'banner');
-
-$name        = htmlspecialchars($profile['name']        ?? 'Your Name');
-$headline    = htmlspecialchars($profile['headline']    ?? '');
-$location    = htmlspecialchars($profile['location']    ?? '');
-$bio         = htmlspecialchars($profile['bio']         ?? '');
-$connections = (int)($profile['connections'] ?? 0);
-$posts       = $profile['posts'] ?? [];
+$avatarSrc   = htmlspecialchars(imageUrl($user['avatar'], 'avatar'), ENT_QUOTES);
+$bannerSrc   = htmlspecialchars(imageUrl($user['banner'], 'banner'), ENT_QUOTES);
+$name        = htmlspecialchars($user['name']);
+$headline    = htmlspecialchars($user['headline']);
+$location    = htmlspecialchars($user['location']);
+$bio         = htmlspecialchars($user['bio']);
+$connections = number_format((int)$user['connections']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $name ?> | LinkedIn-like Profile</title>
+    <title><?= $name ?> | LinkedFin</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
 <!-- ── Navigation ── -->
 <nav class="nav">
-    <svg class="nav-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M20.447 20.452H17.21v-5.569c0-1.328-.027-3.036-1.849-3.036-1.851 0-2.134 1.445-2.134 2.939v5.666H9.988V9h3.102v1.561h.044c.432-.818 1.487-1.681 3.061-1.681 3.273 0 3.877 2.154 3.877 4.957v6.615zM5.337 7.433a1.798 1.798 0 11.001-3.597 1.798 1.798 0 010 3.597zM6.756 20.452H3.915V9h2.841v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-    </svg>
-    <span class="nav-title">LinkedIn</span>
+    <a href="/profile.php" class="nav-brand">
+        <span class="nav-logo-icon">LF</span>
+        <span class="nav-title">LinkedFin</span>
+    </a>
     <span class="nav-spacer"></span>
     <a href="/update_profile.php" class="nav-btn">✏️ Edit profile</a>
+    <a href="/auth.php?action=logout" class="nav-btn nav-btn-outline">Sign out</a>
 </nav>
 
 <!-- ── Page layout ── -->
@@ -66,12 +95,12 @@ $posts       = $profile['posts'] ?? [];
 
             <!-- Banner -->
             <div class="banner-wrap">
-                <img src="<?= $bannerSrc ?>" alt="Banner" class="banner-img" id="bannerImg">
+                <img src="<?= $bannerSrc ?>" alt="Banner" class="banner-img">
                 <a href="/update_profile.php#banner" class="banner-edit-btn" title="Edit banner">✏️</a>
 
-                <!-- Round avatar overlapping the banner -->
+                <!-- Round avatar -->
                 <div class="avatar-wrap">
-                    <img src="<?= $avatarSrc ?>" alt="Profile picture of <?= $name ?>" class="avatar-img" id="avatarImg">
+                    <img src="<?= $avatarSrc ?>" alt="Profile picture of <?= $name ?>" class="avatar-img">
                 </div>
             </div>
 
@@ -86,7 +115,7 @@ $posts       = $profile['posts'] ?? [];
                         <span>📍</span><?= $location ?>
                     </div>
                 <?php endif; ?>
-                <div class="profile-connections"><?= number_format($connections) ?> connections</div>
+                <div class="profile-connections"><?= $connections ?> connections</div>
                 <?php if ($bio): ?>
                     <div class="profile-bio"><?= nl2br($bio) ?></div>
                 <?php endif; ?>
@@ -106,24 +135,23 @@ $posts       = $profile['posts'] ?? [];
                 <?php foreach ($posts as $post): ?>
                 <article class="post-item">
                     <div class="post-header">
-                        <img src="<?= $avatarSrc ?>"
-                             alt="<?= $name ?>"
-                             class="post-avatar">
+                        <img src="<?= $avatarSrc ?>" alt="<?= $name ?>" class="post-avatar">
                         <div class="post-meta">
-                            <div class="post-author"><?= htmlspecialchars($post['author'] ?? $name) ?></div>
-                            <div class="post-date"><?= htmlspecialchars($post['date'] ?? '') ?></div>
+                            <div class="post-author"><?= $name ?></div>
+                            <div class="post-date"><?= friendlyDate($post['created_at']) ?></div>
                         </div>
                     </div>
-                    <div class="post-body"><?= htmlspecialchars($post['content'] ?? '') ?></div>
+                    <div class="post-body"><?= htmlspecialchars($post['content']) ?></div>
                     <div class="post-reactions">
-                        <span class="post-reaction post-like-btn" data-liked="0" title="Like">
-                            👍 <span class="like-count"><?= (int)($post['likes'] ?? 0) ?></span>
+                        <span class="post-reaction post-like-btn" data-liked="0"
+                              data-post-id="<?= (int)$post['id'] ?>" title="Like">
+                            👍 <span class="like-count"><?= (int)$post['likes'] ?></span>
                         </span>
                         <span class="post-reaction" title="Comment">
-                            💬 <?= (int)($post['comments'] ?? 0) ?>
+                            💬 <?= (int)$post['comments'] ?>
                         </span>
                         <span class="post-reaction" title="Share">
-                            🔁 <?= (int)($post['shares'] ?? 0) ?>
+                            🔁 <?= (int)$post['shares'] ?>
                         </span>
                     </div>
                 </article>

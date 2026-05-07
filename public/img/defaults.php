@@ -14,7 +14,7 @@ if ($type === 'banner') {
 } else {
     $width  = 400;
     $height = 400;
-    $bg     = [10, 102, 194];  // LinkedIn blue
+    $bg     = [14, 116, 144];  // LinkedFin teal
     $text   = 'AJ';
 }
 

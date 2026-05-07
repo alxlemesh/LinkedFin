@@ -1,36 +1,43 @@
 <?php
 /**
- * Update Profile page — edit profile info, upload avatar and banner.
+ * LinkedFin – Update Profile page.
  */
 session_start();
 
-$dataFile = __DIR__ . '/data/profile.json';
-$profile  = json_decode(file_get_contents($dataFile), true);
-
-// Merge session overrides
-foreach (['name', 'headline', 'bio', 'location'] as $field) {
-    if (!empty($_SESSION[$field])) {
-        $profile[$field] = $_SESSION[$field];
-    }
+// Auth guard
+if (empty($_SESSION['user_id'])) {
+    header('Location: /login.php');
+    exit;
 }
 
-// Current images
-function currentImageSrc(string $sessionKey, string $type): string
+require_once __DIR__ . '/db.php';
+
+$userId = (int)$_SESSION['user_id'];
+
+// Load user from DB
+$stmt = db()->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
+$stmt->bind_param('i', $userId);
+$stmt->execute();
+$user = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+if (!$user) {
+    session_destroy();
+    header('Location: /login.php');
+    exit;
+}
+
+// Image helper – returns a raw URL; escape at output context
+function currentImageSrc(?string $filename, string $type): string
 {
-    $val = $_SESSION[$sessionKey] ?? null;
-    if ($val && file_exists(__DIR__ . '/uploads/' . $val)) {
-        return '/uploads/' . $val;
+    if ($filename && file_exists(__DIR__ . '/uploads/' . $filename)) {
+        return '/uploads/' . $filename;
     }
     return '/img/defaults.php?type=' . $type;
 }
 
-$avatarSrc = currentImageSrc('avatar', 'avatar');
-$bannerSrc = currentImageSrc('banner', 'banner');
-
-$name     = $profile['name']     ?? '';
-$headline = $profile['headline'] ?? '';
-$location = $profile['location'] ?? '';
-$bio      = $profile['bio']      ?? '';
+$avatarSrc = htmlspecialchars(currentImageSrc($user['avatar'], 'avatar'), ENT_QUOTES);
+$bannerSrc = htmlspecialchars(currentImageSrc($user['banner'], 'banner'), ENT_QUOTES);
 
 // Flash messages
 $success = $_SESSION['flash_success'] ?? null;
@@ -42,18 +49,19 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Profile</title>
+    <title>Edit Profile | LinkedFin</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
 <nav class="nav">
-    <svg class="nav-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M20.447 20.452H17.21v-5.569c0-1.328-.027-3.036-1.849-3.036-1.851 0-2.134 1.445-2.134 2.939v5.666H9.988V9h3.102v1.561h.044c.432-.818 1.487-1.681 3.061-1.681 3.273 0 3.877 2.154 3.877 4.957v6.615zM5.337 7.433a1.798 1.798 0 11.001-3.597 1.798 1.798 0 010 3.597zM6.756 20.452H3.915V9h2.841v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-    </svg>
-    <span class="nav-title">LinkedIn</span>
+    <a href="/profile.php" class="nav-brand">
+        <span class="nav-logo-icon">LF</span>
+        <span class="nav-title">LinkedFin</span>
+    </a>
     <span class="nav-spacer"></span>
     <a href="/profile.php" class="nav-btn">← View profile</a>
+    <a href="/auth.php?action=logout" class="nav-btn nav-btn-outline">Sign out</a>
 </nav>
 
 <div class="update-wrap">
@@ -74,14 +82,14 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <div class="form-group">
                 <label for="name">Full name</label>
                 <input type="text" id="name" name="name"
-                       value="<?= htmlspecialchars($name) ?>"
+                       value="<?= htmlspecialchars($user['name']) ?>"
                        maxlength="100" required>
             </div>
 
             <div class="form-group">
                 <label for="headline">Headline</label>
                 <input type="text" id="headline" name="headline"
-                       value="<?= htmlspecialchars($headline) ?>"
+                       value="<?= htmlspecialchars($user['headline']) ?>"
                        maxlength="220"
                        placeholder="e.g. Software Engineer | Open-source enthusiast">
             </div>
@@ -89,7 +97,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <div class="form-group">
                 <label for="location">Location</label>
                 <input type="text" id="location" name="location"
-                       value="<?= htmlspecialchars($location) ?>"
+                       value="<?= htmlspecialchars($user['location']) ?>"
                        maxlength="100"
                        placeholder="e.g. San Francisco, CA">
             </div>
@@ -97,7 +105,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
             <div class="form-group">
                 <label for="bio">About</label>
                 <textarea id="bio" name="bio" maxlength="2000"
-                          placeholder="Write a brief summary about yourself…"><?= htmlspecialchars($bio) ?></textarea>
+                          placeholder="Write a brief summary about yourself…"><?= htmlspecialchars($user['bio']) ?></textarea>
             </div>
 
             <div class="form-submit">
@@ -108,18 +116,13 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
         <hr style="border:none;border-top:1px solid #e0dede;margin:28px 0;">
 
-        <!-- ── Avatar upload form ── -->
+        <!-- ── Avatar upload ── -->
         <h2 style="font-size:18px;font-weight:700;margin-bottom:16px;">Profile picture</h2>
 
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
-            <img src="<?= $avatarSrc ?>"
-                 alt="Current profile picture"
+            <img src="<?= $avatarSrc ?>" alt="Current profile picture"
                  style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #e0dede;">
-            <div>
-                <div style="font-size:13px;color:#00000099;line-height:1.5;">
-                    Current profile picture
-                </div>
-            </div>
+            <div style="font-size:13px;color:#00000099;">Current profile picture</div>
         </div>
 
         <form method="POST" action="/process_upload.php" enctype="multipart/form-data">
@@ -133,8 +136,8 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                     <span class="file-upload-icon">🖼️</span>
                     <div class="file-upload-hint">
                         <strong>Click to choose</strong> or drag &amp; drop<br>
-                        JPEG, PNG or GIF &mdash; max <strong>8 MB</strong><br>
-                        Recommended: <strong>400 × 400 px</strong>, minimum <strong>200 × 200 px</strong>
+                        JPEG, PNG or GIF — max <strong>8 MB</strong><br>
+                        Recommended: <strong>400 × 400 px</strong>, min <strong>200 × 200 px</strong>
                     </div>
                 </div>
                 <div id="avatar-preview-wrap" class="preview-wrap">
@@ -155,12 +158,11 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
         <hr style="border:none;border-top:1px solid #e0dede;margin:28px 0;" id="banner">
 
-        <!-- ── Banner upload form ── -->
+        <!-- ── Banner upload ── -->
         <h2 style="font-size:18px;font-weight:700;margin-bottom:16px;">Background / banner photo</h2>
 
         <div style="margin-bottom:16px;">
-            <img src="<?= $bannerSrc ?>"
-                 alt="Current banner"
+            <img src="<?= $bannerSrc ?>" alt="Current banner"
                  style="width:100%;max-height:120px;border-radius:6px;object-fit:cover;border:1px solid #e0dede;">
         </div>
 
@@ -175,8 +177,8 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                     <span class="file-upload-icon">🌄</span>
                     <div class="file-upload-hint">
                         <strong>Click to choose</strong> or drag &amp; drop<br>
-                        JPEG, PNG or GIF &mdash; max <strong>8 MB</strong><br>
-                        Recommended: <strong>1584 × 396 px</strong> (4:1), minimum <strong>400 × 100 px</strong>
+                        JPEG, PNG or GIF — max <strong>8 MB</strong><br>
+                        Recommended: <strong>1584 × 396 px</strong> (4:1), min <strong>400 × 100 px</strong>
                     </div>
                 </div>
                 <div id="banner-preview-wrap" class="preview-wrap">

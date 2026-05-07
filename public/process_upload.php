@@ -1,14 +1,26 @@
 <?php
 /**
- * process_upload.php – handles profile info updates and image uploads.
+ * LinkedFin – process_upload.php
  *
- * Constraints enforced server-side:
+ * Handles profile-info updates and image uploads.
+ * All changes are persisted to the linkedfin MySQL database via mysqli.
+ *
+ * Image constraints enforced server-side:
  *   Avatar : max 8 MB, JPEG/PNG/GIF, min 200×200 px
  *   Banner : max 8 MB, JPEG/PNG/GIF, min 400×100 px
  */
 session_start();
 
+// Auth guard
+if (empty($_SESSION['user_id'])) {
+    header('Location: /login.php');
+    exit;
+}
+
+require_once __DIR__ . '/db.php';
+
 $action    = $_POST['action'] ?? '';
+$userId    = (int)$_SESSION['user_id'];
 $uploadDir = __DIR__ . '/uploads/';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -30,15 +42,7 @@ function flashError(string $msg): void
 }
 
 /**
- * Validate and move an uploaded image.
- *
- * @param string $inputName  Name of the <input type="file">
- * @param int    $maxBytes   Maximum file size in bytes
- * @param int    $minW       Minimum width in pixels
- * @param int    $minH       Minimum height in pixels
- * @param string $uploadDir  Absolute path to the uploads directory
- * @param string $prefix     Filename prefix ('avatar_' or 'banner_')
- * @return string|null       Saved filename on success, null on failure (sets flash error)
+ * Validate and move an uploaded image, then return the saved filename.
  */
 function handleImageUpload(
     string $inputName,
@@ -48,7 +52,6 @@ function handleImageUpload(
     string $uploadDir,
     string $prefix
 ): ?string {
-    // 1. Check the file was actually sent
     if (empty($_FILES[$inputName]) || $_FILES[$inputName]['error'] === UPLOAD_ERR_NO_FILE) {
         flashError('No file was selected.');
         return null;
@@ -56,7 +59,6 @@ function handleImageUpload(
 
     $file = $_FILES[$inputName];
 
-    // 2. PHP upload error check
     if ($file['error'] !== UPLOAD_ERR_OK) {
         $msgs = [
             UPLOAD_ERR_INI_SIZE   => 'File exceeds the server upload limit.',
@@ -70,14 +72,12 @@ function handleImageUpload(
         return null;
     }
 
-    // 3. File-size check
     if ($file['size'] > $maxBytes) {
         $maxMB = number_format($maxBytes / (1024 * 1024), 0);
         flashError("File is too large. Maximum allowed size is {$maxMB} MB.");
         return null;
     }
 
-    // 4. MIME type check (use getimagesize, not user-supplied MIME)
     $imageInfo = @getimagesize($file['tmp_name']);
     if ($imageInfo === false) {
         flashError('The uploaded file is not a valid image.');
@@ -91,7 +91,6 @@ function handleImageUpload(
         return null;
     }
 
-    // 5. Dimension check
     [$imgW, $imgH] = $imageInfo;
     if ($imgW < $minW || $imgH < $minH) {
         flashError(
@@ -101,8 +100,7 @@ function handleImageUpload(
         return null;
     }
 
-    // 6. Generate a safe filename and move the file
-    $ext      = match ($mime) {
+    $ext = match ($mime) {
         'image/jpeg' => 'jpg',
         'image/png'  => 'png',
         'image/gif'  => 'gif',
@@ -116,17 +114,10 @@ function handleImageUpload(
         return null;
     }
 
-    // 7. Remove the previous file for this slot (keep uploads dir tidy)
-    $sessionKey = rtrim($prefix, '_'); // 'avatar' or 'banner'
-    $oldFile    = $_SESSION[$sessionKey] ?? null;
-    if ($oldFile && $oldFile !== $filename && file_exists($uploadDir . $oldFile)) {
-        @unlink($uploadDir . $oldFile);
-    }
-
     return $filename;
 }
 
-// ── Route actions ──────────────────────────────────────────────────────────────
+// ── Route ──────────────────────────────────────────────────────────────────────
 
 switch ($action) {
 
@@ -136,41 +127,26 @@ switch ($action) {
             redirect('/update_profile.php');
         }
 
-        $name     = trim($_POST['name']     ?? '');
-        $headline = trim($_POST['headline'] ?? '');
-        $location = trim($_POST['location'] ?? '');
-        $bio      = trim($_POST['bio']      ?? '');
+        $name     = mb_substr(trim($_POST['name']     ?? ''), 0, 100);
+        $headline = mb_substr(trim($_POST['headline'] ?? ''), 0, 220);
+        $location = mb_substr(trim($_POST['location'] ?? ''), 0, 100);
+        $bio      = mb_substr(trim($_POST['bio']      ?? ''), 0, 2000);
 
         if ($name === '') {
             flashError('Full name cannot be empty.');
             redirect('/update_profile.php');
         }
 
-        // Persist to session (and optionally write back to JSON)
-        $_SESSION['name']     = mb_substr($name,     0, 100);
-        $_SESSION['headline'] = mb_substr($headline, 0, 220);
-        $_SESSION['location'] = mb_substr($location, 0, 100);
-        $_SESSION['bio']      = mb_substr($bio,       0, 2000);
-
-        // Also persist to the JSON data file
-        $dataFile     = __DIR__ . '/data/profile.json';
-        $rawJson      = @file_get_contents($dataFile);
-        $existingData = $rawJson !== false ? json_decode($rawJson, true) : [];
-        if (!is_array($existingData)) {
-            $existingData = [];
-        }
-        $existingData['name']     = $_SESSION['name'];
-        $existingData['headline'] = $_SESSION['headline'];
-        $existingData['location'] = $_SESSION['location'];
-        $existingData['bio']      = $_SESSION['bio'];
-
-        $encoded = json_encode($existingData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        if ($encoded === false || file_put_contents($dataFile, $encoded) === false) {
-            // Session already updated; treat file-write failure as non-fatal
-            flashSuccess('Profile updated (note: changes may not persist after session expires).');
-        } else {
+        $stmt = db()->prepare(
+            'UPDATE users SET name=?, headline=?, location=?, bio=? WHERE id=?'
+        );
+        $stmt->bind_param('ssssi', $name, $headline, $location, $bio, $userId);
+        if ($stmt->execute()) {
             flashSuccess('Profile information updated successfully.');
+        } else {
+            flashError('Failed to update profile. Please try again.');
         }
+        $stmt->close();
         redirect('/update_profile.php');
 
     // ── Upload avatar ─────────────────────────────────────────────────────────
@@ -179,17 +155,25 @@ switch ($action) {
             redirect('/update_profile.php');
         }
 
-        $filename = handleImageUpload(
-            'avatar_file',
-            8 * 1024 * 1024, // 8 MB
-            200,              // min width
-            200,              // min height
-            $uploadDir,
-            'avatar_'
-        );
+        // Fetch old avatar to clean up after
+        $selStmt = db()->prepare('SELECT avatar FROM users WHERE id=? LIMIT 1');
+        $selStmt->bind_param('i', $userId);
+        $selStmt->execute();
+        $oldUser = $selStmt->get_result()->fetch_assoc();
+        $selStmt->close();
+        $oldFile = $oldUser['avatar'] ?? null;
 
+        $filename = handleImageUpload('avatar_file', 8 * 1024 * 1024, 200, 200, $uploadDir, 'avatar_');
         if ($filename !== null) {
-            $_SESSION['avatar'] = $filename;
+            $stmt = db()->prepare('UPDATE users SET avatar=? WHERE id=?');
+            $stmt->bind_param('si', $filename, $userId);
+            $stmt->execute();
+            $stmt->close();
+
+            // Remove old file
+            if ($oldFile && $oldFile !== $filename && file_exists($uploadDir . $oldFile)) {
+                @unlink($uploadDir . $oldFile);
+            }
             flashSuccess('Profile picture updated successfully.');
         }
         redirect('/update_profile.php');
@@ -200,22 +184,27 @@ switch ($action) {
             redirect('/update_profile.php');
         }
 
-        $filename = handleImageUpload(
-            'banner_file',
-            8 * 1024 * 1024, // 8 MB
-            400,              // min width
-            100,              // min height
-            $uploadDir,
-            'banner_'
-        );
+        $selStmt = db()->prepare('SELECT banner FROM users WHERE id=? LIMIT 1');
+        $selStmt->bind_param('i', $userId);
+        $selStmt->execute();
+        $oldUser = $selStmt->get_result()->fetch_assoc();
+        $selStmt->close();
+        $oldFile = $oldUser['banner'] ?? null;
 
+        $filename = handleImageUpload('banner_file', 8 * 1024 * 1024, 400, 100, $uploadDir, 'banner_');
         if ($filename !== null) {
-            $_SESSION['banner'] = $filename;
+            $stmt = db()->prepare('UPDATE users SET banner=? WHERE id=?');
+            $stmt->bind_param('si', $filename, $userId);
+            $stmt->execute();
+            $stmt->close();
+
+            if ($oldFile && $oldFile !== $filename && file_exists($uploadDir . $oldFile)) {
+                @unlink($uploadDir . $oldFile);
+            }
             flashSuccess('Banner photo updated successfully.');
         }
         redirect('/update_profile.php#banner');
 
-    // ── Unknown action ────────────────────────────────────────────────────────
     default:
         redirect('/update_profile.php');
 }

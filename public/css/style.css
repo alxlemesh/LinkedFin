@@ -1,5 +1,5 @@
 /* ============================================================
-   LinkedIn-inspired profile stylesheet
+   LinkedFin profile stylesheet
    ============================================================ */
 
 /* Reset & base */
@@ -27,20 +27,35 @@ a { color: inherit; text-decoration: none; }
     padding: 0 16px;
     gap: 12px;
 }
-.nav-logo {
-    width: 34px;
-    height: 34px;
-    fill: #0a66c2;
+/* LF logo badge */
+.nav-logo-icon {
+    background: #0e7490;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 900;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
 }
 .nav-title {
     font-size: 20px;
     font-weight: 700;
-    color: #0a66c2;
+    color: #0e7490;
     letter-spacing: -0.5px;
 }
 .nav-spacer { flex: 1; }
 .nav-btn {
-    background: #0a66c2;
+    background: #0e7490;
     color: #fff;
     border: none;
     border-radius: 16px;
@@ -52,7 +67,12 @@ a { color: inherit; text-decoration: none; }
     display: inline-block;
     transition: background 0.2s;
 }
-.nav-btn:hover { background: #004182; }
+.nav-btn:hover { background: #0c6377; }
+.nav-btn-outline {
+    background: transparent;
+    color: #0e7490;
+    border: 1.5px solid #0e7490;
+}
 
 /* ── Layout ── */
 .page-wrap {
@@ -121,7 +141,7 @@ a { color: inherit; text-decoration: none; }
     border-radius: 50%;
     border: 4px solid #fff;
     overflow: hidden;
-    background: #0a66c2;
+    background: #0e7490;
     cursor: pointer;
 }
 .avatar-img {
@@ -157,12 +177,12 @@ a { color: inherit; text-decoration: none; }
 }
 .profile-connections {
     font-size: 14px;
-    color: #0a66c2;
+    color: #0e7490;
     font-weight: 600;
     margin-top: 8px;
     cursor: pointer;
 }
-.profile-connections:hover { color: #004182; }
+.profile-connections:hover { color: #0c6377; }
 
 .profile-bio {
     font-size: 14px;
@@ -178,7 +198,7 @@ a { color: inherit; text-decoration: none; }
     flex-wrap: wrap;
 }
 .btn-primary {
-    background: #0a66c2;
+    background: #0e7490;
     color: #fff;
     border: none;
     border-radius: 20px;
@@ -190,11 +210,11 @@ a { color: inherit; text-decoration: none; }
     display: inline-block;
     transition: background 0.2s;
 }
-.btn-primary:hover { background: #004182; }
+.btn-primary:hover { background: #0c6377; }
 .btn-outline {
     background: transparent;
-    color: #0a66c2;
-    border: 1.5px solid #0a66c2;
+    color: #0e7490;
+    border: 1.5px solid #0e7490;
     border-radius: 20px;
     padding: 6px 18px;
     font-size: 14px;
@@ -204,7 +224,7 @@ a { color: inherit; text-decoration: none; }
     display: inline-block;
     transition: background 0.2s, color 0.2s;
 }
-.btn-outline:hover { background: #eaf0f9; }
+.btn-outline:hover { background: #e0f2f7; }
 
 /* ── Activity / Wall ── */
 .section-title {
@@ -260,7 +280,7 @@ a { color: inherit; text-decoration: none; }
     cursor: pointer;
     transition: color 0.15s;
 }
-.post-reaction:hover { color: #0a66c2; }
+.post-reaction:hover { color: #0e7490; }
 
 /* ── Sidebar ── */
 .sidebar-card-title {
@@ -315,7 +335,7 @@ a { color: inherit; text-decoration: none; }
     transition: border-color 0.2s;
 }
 .form-group input[type="text"]:focus,
-.form-group textarea:focus { border-color: #0a66c2; box-shadow: 0 0 0 2px #cce0f5; }
+.form-group textarea:focus { border-color: #0e7490; box-shadow: 0 0 0 2px #cde9ef; }
 .form-group textarea { resize: vertical; min-height: 90px; }
 
 .file-upload-box {
@@ -327,7 +347,7 @@ a { color: inherit; text-decoration: none; }
     transition: border-color 0.2s, background 0.2s;
     position: relative;
 }
-.file-upload-box:hover { border-color: #0a66c2; background: #f0f7ff; }
+.file-upload-box:hover { border-color: #0e7490; background: #f0f7ff; }
 .file-upload-box input[type="file"] {
     position: absolute;
     inset: 0;
@@ -338,7 +358,7 @@ a { color: inherit; text-decoration: none; }
 }
 .file-upload-icon { font-size: 32px; margin-bottom: 8px; display: block; }
 .file-upload-hint { font-size: 13px; color: #00000099; line-height: 1.5; }
-.file-upload-hint strong { color: #0a66c2; }
+.file-upload-hint strong { color: #0e7490; }
 
 .preview-wrap {
     margin-top: 12px;

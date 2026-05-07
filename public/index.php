@@ -1,6 +1,11 @@
 <?php
 /**
- * Front controller – redirect root to profile.
+ * Front controller – redirect to profile if logged in, otherwise to login.
  */
-header('Location: /profile.php');
+session_start();
+if (!empty($_SESSION['user_id'])) {
+    header('Location: /profile.php');
+} else {
+    header('Location: /login.php');
+}
 exit;
