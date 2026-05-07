@@ -23,7 +23,7 @@ $action    = $_POST['action'] ?? '';
 $userId    = (int)$_SESSION['user_id'];
 $uploadDir = __DIR__ . '/uploads/';
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+
 
 function redirect(string $url): never
 {
