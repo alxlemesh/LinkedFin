@@ -170,7 +170,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                     <div class="file-upload-hint">
                         <strong>Click to choose</strong> or drag &amp; drop<br>
                         JPEG, PNG or GIF — max <strong>3 MB</strong><br>
-                        Required: <strong>4:1 ratio</strong>, min <strong>400 × 100 px</strong>
+                        Required: <strong>3:1 ratio</strong>, min <strong>600 × 200 px</strong>
                     </div>
                 </div>
                 <div id="banner-preview-wrap" class="preview-wrap">
@@ -188,6 +188,6 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
         imageCropEnabled: <?= IMAGE_CROP_ENABLED ? 'true' : 'false' ?>
     };
 </script>
-<script type="module" src="./js/app.js"></script>
+<script type="module" src="./js/app.js?v=20260512-3to1"></script>
 </body>
 </html>

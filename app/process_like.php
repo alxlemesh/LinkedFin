@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/db.php'; // Повторно используем соединение с БД и конфигурацию
 
 $postId = isset($_POST['post_id']) ? (int)$_POST['post_id'] : 0;
-$like   = isset($_POST['like']) ? (int)$_POST['like'] : -1; // 1=лайк, 0=убрать лайк
+$like   = isset($_POST['like']) ? (int)$_POST['like'] : -1; // 1=лайк,?: -1 =убрать лайк
 
 if ($postId <= 0 || ($like !== 0 && $like !== 1)) {
     http_response_code(400);

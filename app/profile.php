@@ -137,7 +137,7 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
                 <div class="profile-actions">
                     <a href="update_profile.php" class="btn-primary">Edit profile</a>
                     <a class="btn-outline" href="#make-post">Make post</a>
-                    <button class="btn-outline" type="button">More ▾</button>
+                    <button class="btn-outline" type="button" onclick="alert('not implemented')">More ▾</button>
                 </div>
             </div>
         </div>
@@ -203,6 +203,6 @@ unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
 </div>
 
-<script type="module" src="./js/app.js"></script>
+<script type="module" src="./js/app.js?v=20260512-3to1"></script>
 </body>
 </html>

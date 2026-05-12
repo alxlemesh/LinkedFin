@@ -18,7 +18,7 @@ require_once __DIR__ . '/db.php';
 
 $action    = $_POST['action'] ?? '';
 $userId    = (int)$_SESSION['user_id'];
-$uploadDir = __DIR__ . '/uploads/';
+$uploadDir = __DIR__ . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
 
 
 
@@ -53,6 +53,29 @@ function croppedUploadErrorResponse(): never
     jsonResponse(422, ['ok' => false, 'error' => $error]);
 }
 
+function ensureUploadDirectory(string $uploadDir): bool
+{
+    if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true)) {
+        flashError('Upload folder could not be created.');
+        return false;
+    }
+
+    if (!is_writable($uploadDir)) {
+        flashError('Upload folder is not writable. On macOS/XAMPP, check permissions for app/uploads.');
+        return false;
+    }
+
+    return true;
+}
+
+function hasValidAspectRatio(int $width, int $height, int $aspectW, int $aspectH): bool
+{
+    $actualRatio = $width / $height;
+    $requiredRatio = $aspectW / $aspectH;
+
+    return abs($actualRatio - $requiredRatio) <= 0.01;
+}
+
 /**
  * Проверяет и перемещает загружённое изображение, возвращает сохранённое имя файла.
  */
@@ -67,6 +90,10 @@ function handleImageUpload(
     string $prefix,
     bool   $requireExactAspect = true
 ): ?string {
+    if (!ensureUploadDirectory($uploadDir)) {
+        return null;
+    }
+
     if (empty($_FILES[$inputName]) || $_FILES[$inputName]['error'] === UPLOAD_ERR_NO_FILE) {
         flashError('No file was selected.');
         return null;
@@ -115,7 +142,7 @@ function handleImageUpload(
         return null;
     }
 
-    if ($requireExactAspect && ($imgW * $aspectH) !== ($imgH * $aspectW)) {
+    if ($requireExactAspect && !hasValidAspectRatio($imgW, $imgH, $aspectW, $aspectH)) {
         flashError(
             "Invalid image ratio ({$imgW}×{$imgH} px). " .
             "Required ratio: {$aspectW}:{$aspectH}."
@@ -235,9 +262,9 @@ switch ($action) {
         $filename = handleImageUpload(
             'banner_file',
             3 * 1024 * 1024,
-            400,
-            100,
-            4,
+            600,
+            200,
+            3,
             1,
             $uploadDir,
             'banner_',

@@ -40,6 +40,12 @@ const setupImagePicker = (cropModal, config, appConfig) => {
         showError(message);
     };
 
+    const hasValidAspectRatio = (width, height) => {
+        const actualRatio = width / height;
+        const requiredRatio = config.crop.aspectW / config.crop.aspectH;
+        return Math.abs(actualRatio - requiredRatio) <= 0.01;
+    };
+
     input.addEventListener('change', (e) => {
         const target = e.target;
         const file = target?.files?.[0];
@@ -75,7 +81,7 @@ const setupImagePicker = (cropModal, config, appConfig) => {
             }
 
             if (!appConfig.imageCropEnabled) {
-                const invalidAspect = image.naturalWidth * config.crop.aspectH !== image.naturalHeight * config.crop.aspectW;
+                const invalidAspect = !hasValidAspectRatio(image.naturalWidth, image.naturalHeight);
                 URL.revokeObjectURL(objectUrl);
 
                 if (invalidAspect) {
@@ -141,15 +147,15 @@ export const initImagePickers = (cropModal, appConfig = {}) => {
         inputId: 'banner_file',
         maxBytes: 3 * 1024 * 1024,
         maxSizeLabel: '3 MB',
-        minWidth: 400,
-        minHeight: 100,
+        minWidth: 600,
+        minHeight: 200,
         allowedMime: ['image/jpeg', 'image/png', 'image/gif'],
         crop: {
-            title: 'Crop banner photo (4:1)',
-            aspectW: 4,
+            title: 'Crop banner photo (3:1)',
+            aspectW: 3,
             aspectH: 1,
-            outputW: 1600,
-            outputH: 400,
+            outputW: 1500,
+            outputH: 500,
             action: 'upload_banner',
             fileField: 'banner_file',
             filename: 'banner.jpg',
