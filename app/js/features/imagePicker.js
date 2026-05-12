@@ -1,4 +1,4 @@
-const setupImagePicker = (cropModal, config) => {
+const setupImagePicker = (cropModal, config, appConfig) => {
     const input = document.getElementById(config.inputId);
     if (!input) return;
 
@@ -52,7 +52,7 @@ const setupImagePicker = (cropModal, config) => {
         clearError();
 
         if (file.size > config.maxBytes) {
-            rejectSelection('File is too large. Maximum allowed size is 8 MB.');
+            rejectSelection(`File is too large. Maximum allowed size is ${config.maxSizeLabel}.`);
             return;
         }
 
@@ -71,6 +71,23 @@ const setupImagePicker = (cropModal, config) => {
                 rejectSelection(
                     `Image is too small (${image.naturalWidth}×${image.naturalHeight} px). Minimum required is ${config.minWidth}×${config.minHeight} px.`
                 );
+                return;
+            }
+
+            if (!appConfig.imageCropEnabled) {
+                const invalidAspect = image.naturalWidth * config.crop.aspectH !== image.naturalHeight * config.crop.aspectW;
+                URL.revokeObjectURL(objectUrl);
+
+                if (invalidAspect) {
+                    rejectSelection(
+                        `Invalid image ratio (${image.naturalWidth}×${image.naturalHeight} px). Required ratio is ${config.crop.aspectW}:${config.crop.aspectH}.`
+                    );
+                    return;
+                }
+
+                if (box) box.classList.add('selected');
+                if (hintStrong) hintStrong.textContent = 'Selected: ' + file.name;
+                input.form?.submit();
                 return;
             }
 
@@ -95,10 +112,15 @@ const setupImagePicker = (cropModal, config) => {
     });
 };
 
-export const initImagePickers = (cropModal) => {
+export const initImagePickers = (cropModal, appConfig = {}) => {
+    const pickerConfig = {
+        imageCropEnabled: appConfig.imageCropEnabled !== false
+    };
+
     setupImagePicker(cropModal, {
         inputId: 'avatar_file',
-        maxBytes: 8 * 1024 * 1024,
+        maxBytes: 2 * 1024 * 1024,
+        maxSizeLabel: '2 MB',
         minWidth: 200,
         minHeight: 200,
         allowedMime: ['image/jpeg', 'image/png', 'image/gif'],
@@ -113,11 +135,12 @@ export const initImagePickers = (cropModal) => {
             filename: 'avatar.jpg',
             redirectUrl: 'update_profile.php'
         }
-    });
+    }, pickerConfig);
 
     setupImagePicker(cropModal, {
         inputId: 'banner_file',
-        maxBytes: 8 * 1024 * 1024,
+        maxBytes: 3 * 1024 * 1024,
+        maxSizeLabel: '3 MB',
         minWidth: 400,
         minHeight: 100,
         allowedMime: ['image/jpeg', 'image/png', 'image/gif'],
@@ -132,5 +155,5 @@ export const initImagePickers = (cropModal) => {
             filename: 'banner.jpg',
             redirectUrl: 'update_profile.php#banner'
         }
-    });
+    }, pickerConfig);
 };

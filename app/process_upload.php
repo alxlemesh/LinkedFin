@@ -3,6 +3,13 @@ session_start();
 
 // Проверка аутентификации
 if (empty($_SESSION['user_id'])) {
+    if (($_POST['cropped_upload'] ?? '') === '1') {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => false, 'error' => 'Please sign in again before uploading.']);
+        exit;
+    }
+
     header('Location: login.php');
     exit;
 }
@@ -31,6 +38,21 @@ function flashError(string $msg): void
     $_SESSION['flash_error'] = $msg;
 }
 
+function jsonResponse(int $status, array $payload): never
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($payload);
+    exit;
+}
+
+function croppedUploadErrorResponse(): never
+{
+    $error = $_SESSION['flash_error'] ?? 'Upload failed. Please try again.';
+    unset($_SESSION['flash_error']);
+    jsonResponse(422, ['ok' => false, 'error' => $error]);
+}
+
 /**
  * Проверяет и перемещает загружённое изображение, возвращает сохранённое имя файла.
  */
@@ -42,7 +64,8 @@ function handleImageUpload(
     int    $aspectW,
     int    $aspectH,
     string $uploadDir,
-    string $prefix
+    string $prefix,
+    bool   $requireExactAspect = true
 ): ?string {
     if (empty($_FILES[$inputName]) || $_FILES[$inputName]['error'] === UPLOAD_ERR_NO_FILE) {
         flashError('No file was selected.');
@@ -92,7 +115,7 @@ function handleImageUpload(
         return null;
     }
 
-    if (($imgW * $aspectH) !== ($imgH * $aspectW)) {
+    if ($requireExactAspect && ($imgW * $aspectH) !== ($imgH * $aspectW)) {
         flashError(
             "Invalid image ratio ({$imgW}×{$imgH} px). " .
             "Required ratio: {$aspectW}:{$aspectH}."
@@ -163,7 +186,18 @@ switch ($action) {
         $selStmt->close();
         $oldFile = $oldUser['avatar'] ?? null;
 
-        $filename = handleImageUpload('avatar_file', 8 * 1024 * 1024, 200, 200, 1, 1, $uploadDir, 'avatar_');
+        $isCroppedUpload = ($_POST['cropped_upload'] ?? '') === '1';
+        $filename = handleImageUpload(
+            'avatar_file',
+            2 * 1024 * 1024,
+            200,
+            200,
+            1,
+            1,
+            $uploadDir,
+            'avatar_',
+            !$isCroppedUpload
+        );
         if ($filename !== null) {
             $stmt = db()->prepare('UPDATE users SET avatar=? WHERE id=?');
             $stmt->bind_param('si', $filename, $userId);
@@ -175,6 +209,12 @@ switch ($action) {
                 @unlink($uploadDir . $oldFile);
             }
             flashSuccess('Profile picture updated successfully.');
+
+            if ($isCroppedUpload) {
+                jsonResponse(200, ['ok' => true, 'redirect' => 'update_profile.php']);
+            }
+        } elseif ($isCroppedUpload) {
+            croppedUploadErrorResponse();
         }
         redirect('update_profile.php');
 
@@ -191,7 +231,18 @@ switch ($action) {
         $selStmt->close();
         $oldFile = $oldUser['banner'] ?? null;
 
-        $filename = handleImageUpload('banner_file', 8 * 1024 * 1024, 400, 100, 4, 1, $uploadDir, 'banner_');
+        $isCroppedUpload = ($_POST['cropped_upload'] ?? '') === '1';
+        $filename = handleImageUpload(
+            'banner_file',
+            3 * 1024 * 1024,
+            400,
+            100,
+            4,
+            1,
+            $uploadDir,
+            'banner_',
+            !$isCroppedUpload
+        );
         if ($filename !== null) {
             $stmt = db()->prepare('UPDATE users SET banner=? WHERE id=?');
             $stmt->bind_param('si', $filename, $userId);
@@ -202,6 +253,12 @@ switch ($action) {
                 @unlink($uploadDir . $oldFile);
             }
             flashSuccess('Banner photo updated successfully.');
+
+            if ($isCroppedUpload) {
+                jsonResponse(200, ['ok' => true, 'redirect' => 'update_profile.php#banner']);
+            }
+        } elseif ($isCroppedUpload) {
+            croppedUploadErrorResponse();
         }
         redirect('update_profile.php#banner');
 

@@ -5,7 +5,7 @@ import { initImagePickers } from './features/imagePicker.js';
 
 const init = () => {
     const cropModal = createCropModal();
-    initImagePickers(cropModal);
+    initImagePickers(cropModal, window.LinkedFinConfig || {});
     initAutoDismissAlerts();
     initLikeButtons();
 };

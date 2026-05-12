@@ -60,5 +60,5 @@ try {
     }
 }
 
-flashSuccess('Posted to your activity.');
+flashSuccess('SUCCESS');
 redirect('profile.php');

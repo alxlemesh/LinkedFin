@@ -130,12 +130,24 @@ const createCropModal = () => {
     async function uploadBlob(blob) {
         const form = new FormData();
         form.append('action', state.crop.action);
+        form.append('cropped_upload', '1');
         form.append(state.crop.fileField, blob, state.crop.filename);
-        await fetch('process_upload.php', {
+        const response = await fetch('process_upload.php', {
             method: 'POST',
             body: form,
-            credentials: 'same-origin'
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json'
+            }
         });
+
+        const contentType = response.headers.get('content-type') || '';
+        const data = contentType.includes('application/json') ? await response.json() : null;
+        if (!response.ok || !data?.ok) {
+            throw new Error(data?.error || 'Upload failed. Please try again.');
+        }
+
+        return data;
     }
 
     function open(opts) {
@@ -278,10 +290,10 @@ const createCropModal = () => {
                 return;
             }
             try {
-                await uploadBlob(blob);
-                window.location.href = state.crop.redirectUrl;
+                const result = await uploadBlob(blob);
+                window.location.href = result.redirect || state.crop.redirectUrl;
             } catch (err) {
-                setError('Upload failed. Please try again.');
+                setError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
                 cancelBtn.disabled = false;
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Crop & save';
